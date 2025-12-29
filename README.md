@@ -28,6 +28,8 @@ Request
 
 ## Quickstart
 
+macOS/Linux:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
