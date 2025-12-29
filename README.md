@@ -1,4 +1,4 @@
-# Local First AI Service
+# local-first-ai-service
 
 ## Portfolio Note (Safe-to-Publish)
 This repository is a public, generic demonstration of a local-first service with graceful degradation.

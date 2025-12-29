@@ -44,7 +44,10 @@ def _iter_tracked_files() -> list[Path]:
 
 
 def _scan_file(path: Path) -> list[tuple[int, int, int]]:
-    content = path.read_text(encoding="utf-8", errors="ignore")
+    data = path.read_bytes()
+    if data.startswith(b"\xef\xbb\xbf"):
+        return [(1, 1, 0xFEFF)]
+    content = data.decode("utf-8", errors="ignore")
     findings: list[tuple[int, int, int]] = []
     for line_idx, line in enumerate(content.splitlines(), start=1):
         for col_idx, ch in enumerate(line, start=1):

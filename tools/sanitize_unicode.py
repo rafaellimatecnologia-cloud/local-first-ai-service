@@ -45,6 +45,10 @@ def iter_tracked_files() -> list[Path]:
     return paths
 
 
+def _read_bytes(path: Path) -> bytes:
+    return path.read_bytes()
+
+
 def sanitize_text(text: str) -> str:
     if text.startswith("\ufeff"):
         text = text.lstrip("\ufeff")
@@ -52,9 +56,12 @@ def sanitize_text(text: str) -> str:
 
 
 def sanitize_file(path: Path) -> bool:
-    original = path.read_text(encoding="utf-8")
-    sanitized = sanitize_text(original)
-    if sanitized != original:
+    original_bytes = _read_bytes(path)
+    original_text = original_bytes.decode("utf-8", errors="ignore")
+    sanitized = sanitize_text(original_text)
+    if original_bytes.startswith(b"\xef\xbb\xbf"):
+        original_text = original_text.lstrip("\ufeff")
+    if sanitized != original_text:
         path.write_text(sanitized, encoding="utf-8", newline="\n")
         return True
     return False
