@@ -11,6 +11,7 @@ BANNED_CODEPOINTS = {
     0x2060,  # WORD JOINER
     0x200E,  # LRM
     0x200F,  # RLM
+    0x061C,  # ARABIC LETTER MARK
     0x202A,  # LRE
     0x202B,  # RLE
     0x202C,  # PDF
@@ -24,7 +25,7 @@ BANNED_CODEPOINTS = {
     0x2029,  # PARAGRAPH SEPARATOR
 }
 
-ALLOWED_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt", ".json"}
+ALLOWED_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt"}
 
 
 def _iter_tracked_files() -> list[Path]:

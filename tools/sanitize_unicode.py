@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-TARGET_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt", ".json"}
+TARGET_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt"}
 
 BANNED_CODEPOINTS = {
     0xFEFF,  # BOM
@@ -15,6 +15,7 @@ BANNED_CODEPOINTS = {
     0x2060,  # WORD JOINER
     0x200E,  # LRM
     0x200F,  # RLM
+    0x061C,  # ARABIC LETTER MARK
     0x202A,  # LRE
     0x202B,  # RLE
     0x202C,  # PDF
