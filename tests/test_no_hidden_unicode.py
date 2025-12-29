@@ -49,28 +49,24 @@ _BANNED_SEQUENCES = {
 }
 
 
-def _scan_file(path: Path) -> list[tuple[int, int, int]]:
+def _scan_file(path: Path) -> set[int]:
     data = path.read_bytes()
+    found: set[int] = set()
     if data.startswith(_BOM_BYTES):
-        return [(1, 1, 0xFEFF)]
-    findings: list[tuple[int, int, int]] = []
-    decoded = data.decode("utf-8", errors="ignore")
-    for line_idx, line in enumerate(decoded.splitlines(), start=1):
-        for col_idx, ch in enumerate(line, start=1):
-            codepoint = ord(ch)
-            if codepoint in BANNED_CODEPOINTS:
-                findings.append((line_idx, col_idx, codepoint))
+        found.add(0xFEFF)
     for codepoint, sequence in _BANNED_SEQUENCES.items():
         if sequence in data:
-            findings.append((0, 0, codepoint))
-    return findings
+            found.add(codepoint)
+    return found
 
 
 def test_no_hidden_unicode_characters() -> None:
     violations: list[str] = []
     for path in _iter_tracked_files():
-        for line, col, codepoint in _scan_file(path):
-            violations.append(f"{path}:{line}:{col} contains U+{codepoint:04X}")
+        found = _scan_file(path)
+        if found:
+            codepoints = ", ".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
+            violations.append(f"{path} contains {codepoints}")
     assert not violations, "\n".join([
         "Hidden or bidirectional Unicode characters detected:",
         *violations,
