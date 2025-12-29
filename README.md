@@ -1,4 +1,4 @@
-# local-first-ai-service
+# Local First AI Service
 
 ## Portfolio Note (Safe-to-Publish)
 This repository is a public, generic demonstration of a local-first service with graceful degradation.
@@ -68,6 +68,7 @@ Metrics capture per-request latency and export JSON snapshots (p50/p95). The
 `demo_cli` script prints the current snapshot after running scenarios.
 
 ## Skills Demonstrated
+
 - Local-first execution with graceful degradation under constraints
 - Deterministic fallback rules (no external APIs)
 - Cache (TTL) behavior and basic performance metrics (p50/p95)
