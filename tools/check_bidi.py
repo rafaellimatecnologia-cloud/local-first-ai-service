@@ -5,6 +5,14 @@ import sys
 from pathlib import Path
 
 SUSPICIOUS_CODEPOINTS = {
+    0xFEFF,  # BOM
+    0x200B,  # ZERO WIDTH SPACE
+    0x200C,  # ZERO WIDTH NON-JOINER
+    0x200D,  # ZERO WIDTH JOINER
+    0x2060,  # WORD JOINER
+    0x200E,  # LRM
+    0x200F,  # RLM
+    0x061C,  # ARABIC LETTER MARK
     0x202A,  # LRE
     0x202B,  # RLE
     0x202C,  # PDF
@@ -14,11 +22,11 @@ SUSPICIOUS_CODEPOINTS = {
     0x2067,  # RLI
     0x2068,  # FSI
     0x2069,  # PDI
-    0x200E,  # LRM
-    0x200F,  # RLM
     0x2028,  # LS
     0x2029,  # PS
 }
+
+ALLOWED_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt"}
 
 
 def _iter_tracked_files() -> list[Path]:
@@ -28,7 +36,11 @@ def _iter_tracked_files() -> list[Path]:
         capture_output=True,
         text=True,
     )
-    return [Path(line) for line in result.stdout.splitlines() if line.strip()]
+    return [
+        Path(line)
+        for line in result.stdout.splitlines()
+        if line.strip() and Path(line).suffix in ALLOWED_SUFFIXES
+    ]
 
 
 def _scan_file(path: Path) -> list[tuple[int, int, int]]:
