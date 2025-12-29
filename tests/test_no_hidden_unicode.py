@@ -43,17 +43,26 @@ def _iter_tracked_files() -> list[Path]:
     return files
 
 
+_BOM_BYTES = b"\xef\xbb\xbf"
+_BANNED_SEQUENCES = {
+    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
+}
+
+
 def _scan_file(path: Path) -> list[tuple[int, int, int]]:
     data = path.read_bytes()
-    if data.startswith(b"\xef\xbb\xbf"):
+    if data.startswith(_BOM_BYTES):
         return [(1, 1, 0xFEFF)]
-    content = data.decode("utf-8", errors="ignore")
     findings: list[tuple[int, int, int]] = []
-    for line_idx, line in enumerate(content.splitlines(), start=1):
+    decoded = data.decode("utf-8", errors="ignore")
+    for line_idx, line in enumerate(decoded.splitlines(), start=1):
         for col_idx, ch in enumerate(line, start=1):
             codepoint = ord(ch)
             if codepoint in BANNED_CODEPOINTS:
                 findings.append((line_idx, col_idx, codepoint))
+    for codepoint, sequence in _BANNED_SEQUENCES.items():
+        if sequence in data:
+            findings.append((0, 0, codepoint))
     return findings
 
 

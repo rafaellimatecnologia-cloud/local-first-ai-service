@@ -27,6 +27,10 @@ SUSPICIOUS_CODEPOINTS = {
 }
 
 ALLOWED_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".txt"}
+_BOM_BYTES = b"\xef\xbb\xbf"
+_SUSPICIOUS_SEQUENCES = {
+    codepoint: chr(codepoint).encode("utf-8") for codepoint in SUSPICIOUS_CODEPOINTS
+}
 
 
 def _iter_tracked_files() -> list[Path]:
@@ -43,18 +47,16 @@ def _iter_tracked_files() -> list[Path]:
     ]
 
 
-def _scan_file(path: Path) -> list[tuple[int, int, int]]:
-    try:
-        content = path.read_text(encoding="utf-8")
-    except UnicodeDecodeError:
-        content = path.read_text(encoding="utf-8", errors="ignore")
-    findings: list[tuple[int, int, int]] = []
-    for line_idx, line in enumerate(content.splitlines(), start=1):
-        for col_idx, ch in enumerate(line, start=1):
-            codepoint = ord(ch)
-            if codepoint in SUSPICIOUS_CODEPOINTS:
-                findings.append((line_idx, col_idx, codepoint))
-    return findings
+def _scan_file(path: Path) -> set[int]:
+    data = path.read_bytes()
+    found = {
+        codepoint
+        for codepoint, sequence in _SUSPICIOUS_SEQUENCES.items()
+        if sequence in data
+    }
+    if data.startswith(_BOM_BYTES):
+        found.add(0xFEFF)
+    return found
 
 
 def main() -> int:
@@ -63,10 +65,10 @@ def main() -> int:
     for path in files:
         if not path.is_file():
             continue
-        for line, col, codepoint in _scan_file(path):
-            violations.append(
-                f"{path}:{line}:{col} contains U+{codepoint:04X}"
-            )
+        found = _scan_file(path)
+        if found:
+            codepoints = ", ".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
+            violations.append(f"{path} contains {codepoints}")
     if violations:
         print("Suspicious bidi/control characters detected:")
         for violation in violations:

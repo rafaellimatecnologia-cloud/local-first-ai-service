@@ -29,6 +29,11 @@ BANNED_CODEPOINTS = {
     0x2029,  # PARAGRAPH SEPARATOR
 }
 
+_BOM_BYTES = b"\xef\xbb\xbf"
+_BANNED_SEQUENCES = {
+    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
+}
+
 
 def iter_tracked_files() -> list[Path]:
     result = subprocess.run(
@@ -52,17 +57,25 @@ def _read_bytes(path: Path) -> bytes:
 def sanitize_text(text: str) -> str:
     if text.startswith("\ufeff"):
         text = text.lstrip("\ufeff")
-    return "".join(ch for ch in text if ord(ch) not in BANNED_CODEPOINTS)
+    text = "".join(ch for ch in text if ord(ch) not in BANNED_CODEPOINTS)
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _strip_banned_bytes(data: bytes) -> bytes:
+    if data.startswith(_BOM_BYTES):
+        data = data[len(_BOM_BYTES) :]
+    for sequence in _BANNED_SEQUENCES.values():
+        data = data.replace(sequence, b"")
+    return data
 
 
 def sanitize_file(path: Path) -> bool:
     original_bytes = _read_bytes(path)
-    original_text = original_bytes.decode("utf-8", errors="ignore")
-    sanitized = sanitize_text(original_text)
-    if original_bytes.startswith(b"\xef\xbb\xbf"):
-        original_text = original_text.lstrip("\ufeff")
-    if sanitized != original_text:
-        path.write_text(sanitized, encoding="utf-8", newline="\n")
+    sanitized_bytes = _strip_banned_bytes(original_bytes)
+    sanitized_text = sanitize_text(sanitized_bytes.decode("utf-8", errors="ignore"))
+    normalized_bytes = sanitized_text.encode("utf-8")
+    if normalized_bytes != original_bytes:
+        path.write_bytes(normalized_bytes)
         return True
     return False
 
