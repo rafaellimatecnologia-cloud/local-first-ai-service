@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from local_first_ai_service.cache import TTLCache
 from local_first_ai_service.metrics import MetricsCollector
 from local_first_ai_service.models import Request, Route
@@ -17,15 +19,28 @@ class FakeClock:
         self.now += seconds
 
 
-def build_service(clock: FakeClock, ttl_s: float = 5.0) -> LocalFirstService:
-    cache = TTLCache[str](ttl_s=ttl_s, time_fn=clock.time)
+class StepClock:
+    def __init__(self, steps: list[float]) -> None:
+        self._steps = steps
+        self._index = 0
+
+    def time(self) -> float:
+        if self._index < len(self._steps):
+            value = self._steps[self._index]
+            self._index += 1
+            return value
+        return self._steps[-1]
+
+
+def build_service(time_fn: Callable[[], float], ttl_s: float = 5.0) -> LocalFirstService:
+    cache = TTLCache[str](ttl_s=ttl_s, time_fn=time_fn)
     metrics = MetricsCollector()
-    return LocalFirstService(cache=cache, metrics=metrics, time_fn=clock.time)
+    return LocalFirstService(cache=cache, metrics=metrics, time_fn=time_fn)
 
 
 def test_local_route_is_deterministic() -> None:
     clock = FakeClock()
-    service = build_service(clock)
+    service = build_service(clock.time)
 
     request = Request(payload="hello")
     first = service.handle(request)
@@ -39,7 +54,7 @@ def test_local_route_is_deterministic() -> None:
 
 def test_fallback_route_when_requested() -> None:
     clock = FakeClock()
-    service = build_service(clock)
+    service = build_service(clock.time)
 
     request = Request(payload="cloud:hello", network_available=True)
     response = service.handle(request)
@@ -51,7 +66,7 @@ def test_fallback_route_when_requested() -> None:
 
 def test_degraded_when_network_unavailable_for_fallback() -> None:
     clock = FakeClock()
-    service = build_service(clock)
+    service = build_service(clock.time)
 
     request = Request(payload="cloud:hello", network_available=False)
     response = service.handle(request)
@@ -62,7 +77,7 @@ def test_degraded_when_network_unavailable_for_fallback() -> None:
 
 def test_degraded_when_deadline_exceeded() -> None:
     clock = FakeClock()
-    service = build_service(clock)
+    service = build_service(clock.time)
 
     response = service.handle(Request(payload="hello", deadline_ms=0))
 
@@ -72,7 +87,7 @@ def test_degraded_when_deadline_exceeded() -> None:
 
 def test_cache_ttl_expires_entries() -> None:
     clock = FakeClock()
-    service = build_service(clock, ttl_s=1.0)
+    service = build_service(clock.time, ttl_s=1.0)
 
     request = Request(payload="cache")
     first = service.handle(request)
@@ -85,3 +100,14 @@ def test_cache_ttl_expires_entries() -> None:
     clock.advance(1.0)
     third = service.handle(request)
     assert third.cache_hit is False
+
+
+def test_degraded_when_elapsed_time_exceeds_deadline() -> None:
+    clock = StepClock([0.0, 0.0, 0.0, 0.2, 0.2])
+    service = build_service(clock.time)
+
+    request = Request(payload="hello", deadline_ms=50, simulate_latency_ms=10)
+    response = service.handle(request)
+
+    assert response.route is Route.DEGRADED
+    assert response.degraded is True

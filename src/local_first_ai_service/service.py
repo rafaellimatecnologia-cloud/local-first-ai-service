@@ -21,14 +21,21 @@ class LocalFirstService:
     def handle(self, request: Request) -> Response:
         start = self._time_fn()
         if request.deadline_ms <= 0:
-            return self._degraded_response(start, request, cache_hit=False)
+            response = self._degraded_response(start, request, cache_hit=False)
+            self._metrics.record(response.latency_ms)
+            return response
         if request.simulate_latency_ms >= request.deadline_ms:
-            return self._degraded_response(start, request, cache_hit=False)
+            response = self._degraded_response(start, request, cache_hit=False)
+            self._metrics.record(response.latency_ms)
+            return response
 
         if request.payload.startswith("cloud:"):
             if not request.network_available:
-                return self._degraded_response(start, request, cache_hit=False)
+                response = self._degraded_response(start, request, cache_hit=False)
+                self._metrics.record(response.latency_ms)
+                return response
             response = self._fallback_handler(request, start)
+            response = self._apply_deadline(start, request, response)
             self._metrics.record(response.latency_ms)
             return response
 
@@ -42,6 +49,7 @@ class LocalFirstService:
                 cache_hit=True,
                 latency_ms=self._latency_ms(start, request),
             )
+            response = self._apply_deadline(start, request, response)
             self._metrics.record(response.latency_ms)
             return response
 
@@ -54,6 +62,7 @@ class LocalFirstService:
             cache_hit=False,
             latency_ms=self._latency_ms(start, request),
         )
+        response = self._apply_deadline(start, request, response)
         self._metrics.record(response.latency_ms)
         return response
 
@@ -73,16 +82,23 @@ class LocalFirstService:
         )
 
     def _degraded_response(self, start: float, request: Request, cache_hit: bool) -> Response:
-        response = Response(
+        return Response(
             route=Route.DEGRADED,
             result="degraded:unavailable",
             degraded=True,
             cache_hit=cache_hit,
             latency_ms=self._latency_ms(start, request),
         )
-        self._metrics.record(response.latency_ms)
+
+    def _apply_deadline(self, start: float, request: Request, response: Response) -> Response:
+        if request.deadline_ms <= 0:
+            return response
+        if self._elapsed_ms(start) > request.deadline_ms:
+            return self._degraded_response(start, request, cache_hit=response.cache_hit)
         return response
 
+    def _elapsed_ms(self, start: float) -> float:
+        return max(0.0, (self._time_fn() - start) * 1000)
+
     def _latency_ms(self, start: float, request: Request) -> float:
-        elapsed_ms = (self._time_fn() - start) * 1000
-        return max(0.0, elapsed_ms + float(request.simulate_latency_ms))
+        return max(0.0, self._elapsed_ms(start) + float(request.simulate_latency_ms))
