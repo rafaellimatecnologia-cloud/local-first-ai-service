@@ -77,6 +77,7 @@ Metrics capture per-request latency and export JSON snapshots (p50/p95). The
 ## Tests
 
 ```bash
+pip install -e ".[dev]"
 pytest
 ```
 
