@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 BANNED_CODEPOINTS = {
+    0x00A0,  # NO-BREAK SPACE
     0xFEFF,  # BOM
     0x200B,  # ZERO WIDTH SPACE
     0x200C,  # ZERO WIDTH NON-JOINER

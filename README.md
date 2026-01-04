@@ -39,6 +39,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 python examples/demo_cli.py
+pytest
 ```
 
 Windows (PowerShell):
@@ -48,6 +49,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 python examples/demo_cli.py
+pytest
 ```
 
 ## Behavior
