@@ -1,0 +1,36 @@
+name: bug report
+description: report a problem to help us improve
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to report a bug."
+  - type: textarea
+    id: summary
+    attributes:
+      label: summary
+      description: what happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: steps to reproduce
+      description: how can we reproduce the issue?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: expected behavior
+      description: what did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: environment
+      description: os, python version, and relevant tooling
+    validations:
+      required: false

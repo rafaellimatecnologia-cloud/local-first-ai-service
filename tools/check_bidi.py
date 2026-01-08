@@ -50,11 +50,7 @@ def _iter_tracked_files() -> list[Path]:
 
 def _scan_file(path: Path) -> set[int]:
     data = path.read_bytes()
-    found = {
-        codepoint
-        for codepoint, sequence in _SUSPICIOUS_SEQUENCES.items()
-        if sequence in data
-    }
+    found = {codepoint for codepoint, sequence in _SUSPICIOUS_SEQUENCES.items() if sequence in data}
     if data.startswith(_BOM_BYTES):
         found.add(0xFEFF)
     return found

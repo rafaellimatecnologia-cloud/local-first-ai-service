@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Report and normalize hidden Unicode characters in tracked text files."""
+
 from __future__ import annotations
 
 import argparse
@@ -32,9 +33,7 @@ BANNED_CODEPOINTS = {
 }
 
 _BOM_BYTES = b"\xef\xbb\xbf"
-_BANNED_SEQUENCES = {
-    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
-}
+_BANNED_SEQUENCES = {codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS}
 
 
 def _iter_tracked_files() -> list[Path]:
@@ -54,11 +53,7 @@ def _iter_tracked_files() -> list[Path]:
 
 def _scan_bytes(data: bytes) -> tuple[bool, set[int]]:
     has_bom = data.startswith(_BOM_BYTES)
-    found = {
-        codepoint
-        for codepoint, sequence in _BANNED_SEQUENCES.items()
-        if sequence in data
-    }
+    found = {codepoint for codepoint, sequence in _BANNED_SEQUENCES.items() if sequence in data}
     return has_bom, found
 
 
@@ -81,8 +76,7 @@ def _report_file(path: Path) -> tuple[bool, str]:
         details.append("BOM")
     if found:
         details.append(
-            "codepoints="
-            + ",".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
+            "codepoints=" + ",".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
         )
     return True, f"{path}: " + "; ".join(details)
 

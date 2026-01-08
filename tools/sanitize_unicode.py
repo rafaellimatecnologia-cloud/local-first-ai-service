@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Remove hidden Unicode characters from text files in the repository."""
+
 from __future__ import annotations
 
 import subprocess
@@ -31,9 +32,7 @@ BANNED_CODEPOINTS = {
 }
 
 _BOM_BYTES = b"\xef\xbb\xbf"
-_BANNED_SEQUENCES = {
-    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
-}
+_BANNED_SEQUENCES = {codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS}
 
 
 def iter_tracked_files() -> list[Path]:
