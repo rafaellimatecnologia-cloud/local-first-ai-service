@@ -14,23 +14,15 @@ A local-first service that deterministically routes by deadline, degrades safely
 
 ## Demo (3 seconds)
 
-![demo cli output](docs/assets/demo.gif)
-> If the image is missing, add it via GitHub upload in a follow-up commit.
+![Demo](docs/assets/demo.gif)
 
-### How to record the demo GIF (Windows/macOS/Linux)
-
-1. Run `python examples/demo_cli.py` to produce deterministic output.
-2. Record a 3–5 second clip of the terminal:
-   - **Windows:** Xbox Game Bar (Win+G) screen capture.
-   - **macOS:** QuickTime Player → New Screen Recording.
-   - **Linux:** GNOME Screen Recorder (Shift+Ctrl+Alt+R) or your preferred local recorder.
-3. Export the clip as `docs/assets/demo.gif`.
+> Note: The demo GIF is uploaded manually outside this PR.
 
 ## Why this matters
 
-- Keeps latency, data, and failure modes local by default.
+- Keeps data, latency, and failure modes local by default.
 - Makes routing decisions reproducible for audits and incident reviews.
-- Degrades safely with clear metrics when constraints are violated.
+- Degrades safely with clear, predictable outcomes under constraints.
 
 ## Architecture — Local-first decision flow
 
@@ -47,6 +39,16 @@ flowchart TD
     fallback --> cache
     degraded --> cache
 ```
+
+## Behavior
+
+- **Local:** deterministic in-process handler.
+- **Fallback:** deterministic alternate route when network is available.
+- **Degraded:** minimal response when constraints are violated.
+
+## Observability
+
+Metrics capture per-request latency and export JSON snapshots with p50/p95 to support audits and tests.
 
 ## What this demonstrates
 
@@ -65,7 +67,8 @@ flowchart TD
 ## Quickstart
 
 ```bash
-pip install -e ".[dev]"
+pip install -e .
+pip install pytest ruff pyright
 python examples/demo_cli.py
 pytest
 ```
