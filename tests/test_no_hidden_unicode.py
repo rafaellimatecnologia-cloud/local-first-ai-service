@@ -45,9 +45,7 @@ def _iter_tracked_files() -> list[Path]:
 
 
 _BOM_BYTES = b"\xef\xbb\xbf"
-_BANNED_SEQUENCES = {
-    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
-}
+_BANNED_SEQUENCES = {codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS}
 
 
 def _scan_file(path: Path) -> set[int]:
@@ -68,7 +66,9 @@ def test_no_hidden_unicode_characters() -> None:
         if found:
             codepoints = ", ".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
             violations.append(f"{path} contains {codepoints}")
-    assert not violations, "\n".join([
-        "Hidden or bidirectional Unicode characters detected:",
-        *violations,
-    ])
+    assert not violations, "\n".join(
+        [
+            "Hidden or bidirectional Unicode characters detected:",
+            *violations,
+        ]
+    )

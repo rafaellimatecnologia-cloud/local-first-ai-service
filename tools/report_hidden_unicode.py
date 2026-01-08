@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Report hidden Unicode characters in tracked text files."""
+
 from __future__ import annotations
 
 import subprocess
@@ -47,19 +48,13 @@ def _iter_tracked_files() -> list[Path]:
 
 
 _BOM_BYTES = b"\xef\xbb\xbf"
-_BANNED_SEQUENCES = {
-    codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS
-}
+_BANNED_SEQUENCES = {codepoint: chr(codepoint).encode("utf-8") for codepoint in BANNED_CODEPOINTS}
 
 
 def _scan_file(path: Path) -> tuple[bool, set[int]]:
     data = path.read_bytes()
     has_bom = data.startswith(_BOM_BYTES)
-    found = {
-        codepoint
-        for codepoint, sequence in _BANNED_SEQUENCES.items()
-        if sequence in data
-    }
+    found = {codepoint for codepoint, sequence in _BANNED_SEQUENCES.items() if sequence in data}
     return has_bom, found
 
 
@@ -73,8 +68,7 @@ def main() -> int:
                 details.append("BOM")
             if found:
                 details.append(
-                    "codepoints="
-                    + ",".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
+                    "codepoints=" + ",".join(f"U+{codepoint:04X}" for codepoint in sorted(found))
                 )
             issues.append(f"{path}: " + "; ".join(details))
     if issues:
