@@ -45,8 +45,7 @@ flowchart TD
 - **Local:** deterministic in-process handler.
 - **Fallback:** deterministic alternate route when network is available.
 - **Degraded:** minimal response when constraints are violated.
-- See: docs/POLICY_MODEL.md (SLO-aware routing policy model).
-
+- See: [Policy Model (SLO-aware routing)](docs/POLICY_MODEL.md)
 ## Observability
 
 Metrics capture per-request latency and export JSON snapshots with p50/p95 to support audits and tests.
