@@ -24,7 +24,7 @@ A local-first service that deterministically routes by deadline, degrades safely
 - Makes routing decisions reproducible for audits and incident reviews.
 - Degrades safely with clear, predictable outcomes under constraints.
 
-## Architecture — Local-first decision flow
+## Architecture - Local-first decision flow
 
 ```mermaid
 flowchart TD
@@ -45,6 +45,7 @@ flowchart TD
 - **Local:** deterministic in-process handler.
 - **Fallback:** deterministic alternate route when network is available.
 - **Degraded:** minimal response when constraints are violated.
+- See: docs/POLICY_MODEL.md (SLO-aware routing policy model).
 
 ## Observability
 
