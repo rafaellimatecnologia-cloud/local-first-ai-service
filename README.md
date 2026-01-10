@@ -45,6 +45,7 @@ flowchart TD
 - **Local:** deterministic in-process handler.
 - **Fallback:** deterministic alternate route when network is available.
 - **Degraded:** minimal response when constraints are violated.
+- See: docs/POLICY_MODEL.md (SLO-aware routing policy model).
 
 ## Observability
 
